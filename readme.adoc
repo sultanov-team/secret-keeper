@@ -1,0 +1,23 @@
+== team.sultanov/secret-keeper
+
+=== Quick Start Guide
+
+Add the following dependency in your project:
+
+[source,clojure]
+----
+;; project.clj or build.boot
+[team.sultanov/secret-keeper "0.0.1"]
+
+;; deps.edn
+team.sultanov/secret-keeper {:mvn/version "0.0.1"}
+
+----
+
+=== Example
+
+TBD
+
+=== License
+
+link:license[Copyright © 2021 sultanov.team]

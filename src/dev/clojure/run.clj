@@ -3,6 +3,7 @@
   (:require
     [clojure.pprint :as pprint]
     [clojure.set :as set]
+    [clojure.tools.build.util.file :as file]
     [org.corfield.build :as bb]))
 
 
@@ -53,10 +54,12 @@
 
 (defn write-meta
   [build-meta]
-  (->> build-meta
-    (pretty-print)
-    (with-out-str)
-    (spit "src/main/resources/secret-keeper/build.edn")))
+  (let [dir "src/main/resources/secret-keeper"]
+    (file/ensure-dir dir)
+    (->> build-meta
+      (pretty-print)
+      (with-out-str)
+      (spit (str dir "/build.edn")))))
 
 
 (defn repl

@@ -65,11 +65,11 @@
 
   clean     {:doc     "Cleanup"
              :depends [-config]
-             :task    (shell {:extra-env -config} "clojure -T:dev:test:run clean")}
+             :task    (shell {:extra-env -config} "clojure -T:dev:run clean")}
 
   repl      {:doc     "Run REPL"
              :depends [-config]
-             :task    (shell {:extra-env -config} "clojure -T:dev:test:run repl")}
+             :task    (shell {:extra-env -config} "clojure -T:dev:run repl")}
 
   lint      {:doc  "Run linters"
              :task (do
@@ -97,8 +97,8 @@
 
   deploy    {:doc     "Run deploy"
              :depends [-config build]
-             :task    (shell {:extra-env -config} "clojure -T:dev:test:run deploy")}
+             :task    (shell {:extra-env -config} "clojure -T:dev:run deploy")}
 
   outdated  {:doc     "Check for outdated dependencies"
              :depends [-config]
-             :task    (shell {:extra-env -config} "clojure -T:dev:test:run outdated")}}}
+             :task    (shell {:extra-env -config} "clojure -T:dev:run outdated")}}}

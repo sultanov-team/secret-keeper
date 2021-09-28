@@ -1,9 +1,9 @@
 (ns user
   "Development helper functions."
   (:require
-    [hashp.core]
+    [cider.piggieback :as pb]
     [cljs.repl.node :as rn]
-    [cider.piggieback :as pb]))
+    [hashp.core]))
 
 
 (defmacro jit

@@ -24,4 +24,5 @@
            {:exclude {cljs.test    [deftest is testing use-fixtures]
                       clojure.test [deftest is testing use-fixtures]}}}
 
+ :skip-comments true
  :hooks   {}}

@@ -8,9 +8,7 @@
        (clojure.lang
          PersistentArrayMap
          PersistentHashMap
-         Symbol)
-       (java.io
-         Writer))))
+         Symbol))))
 
 
 (defn square

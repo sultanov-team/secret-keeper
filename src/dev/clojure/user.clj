@@ -1,7 +1,9 @@
 (ns user
   "Development helper functions."
   (:require
-    [hashp.core]))
+    [hashp.core]
+    [cljs.repl.node :as rn]
+    [cider.piggieback :as pb]))
 
 
 (defmacro jit
@@ -9,3 +11,8 @@
   [sym]
   `(requiring-resolve '~sym))
 
+
+(defn cljs-repl
+  "Starts a ClojureScript REPL."
+  []
+  (pb/cljs-repl (rn/repl-env)))

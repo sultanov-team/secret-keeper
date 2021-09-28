@@ -4,9 +4,11 @@
 
  :aliases {:dev       {:extra-paths ["src/dev/clojure" "src/dev/resources"]
                        :extra-deps  {org.clojure/clojurescript {:mvn/version "1.10.879"}
+                                     cider/piggieback          {:mvn/version "0.5.2"}
                                      nrepl/nrepl               {:mvn/version "0.8.3"}
                                      hashp/hashp               {:mvn/version "0.2.1"}}
-                       :main-opts   ["--main" "nrepl.cmdline"]}
+                       :main-opts   ["--main" "nrepl.cmdline"
+                                     "--middleware" "[cider.piggieback/wrap-cljs-repl]"]}
 
            :test-clj  {:extra-paths ["src/test/clojure" "src/test/resources"]
                        :extra-deps  {lambdaisland/kaocha           {:mvn/version "1.0.887"}

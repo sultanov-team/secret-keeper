@@ -1,5 +1,7 @@
 == team.sultanov/secret-keeper
 
+A Clojure(Script) library for keeping your secrets under control.
+
 === Quick Start Guide
 
 Add the following dependency in your project:

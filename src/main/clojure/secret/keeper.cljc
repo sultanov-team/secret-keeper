@@ -17,12 +17,6 @@
          Writer))))
 
 
-(defn square
-  "FIXME: remove me"
-  [x]
-  (* x x))
-
-
 #?(:clj
    (set! *warn-on-reflection* true))
 
@@ -222,18 +216,23 @@
 
 
 (comment
-  (def f #?(:clj  (partial clojure.edn/read-string {:readers *data-readers*})
-            :cljs reader/read-string))
 
-  (def s (make-secret 123 :private))
-  (category s) ;; => :private
-  (data s) ;; => 123
-  (str s) ;; => "{:data \"*** CENSORED ***\", :category :private}"
-  (prn-str s) ;; => "#secret {:data \"*** CENSORED ***\", :category :private}\n"
+  (def secret (make-secret 123 :private))
+  (category secret) ;; => :private
+  (data secret) ;; => 123
+  (str secret) ;; => "{:data \"*** CENSORED ***\", :category :private}"
+  (pr-str secret) ;; => "#secret {:data \"*** CENSORED ***\", :category :private}"
 
+
+  (def parse
+    #?(:clj  (partial clojure.edn/read-string {:readers *data-readers*})
+       :cljs reader/read-string))
+
+  ;; In the project root directory .env file contains TEST_TOKEN environment variable
+  ;; $TEST_TOKEN = token_12345
   (reduce
     (fn [acc s]
-      (assoc acc s (f s)))
+      (assoc acc s (parse s)))
     {} [
         "#secret #{1 2 3}"
         "#secret (1 2 3)"
@@ -263,7 +262,6 @@
   ;;  "#secret nil"                                   nil
   ;;  "#secret TEST_TOKEN"                            #secret{:data "*** CENSORED ***", :category :secret}
   ;;  "#secret true"                                  #secret{:data "*** CENSORED ***", :category :secret}
-  ;;  "#secret {:category :private :data \"123\"}"    #secret{:data "*** CENSORED ***", :category :private}
   ;;  "#secret {:category :private :data \"string\"}" #secret{:data "*** CENSORED ***", :category :private}
   ;;  "#secret {:data \"string\"}"                    #secret{:data "*** CENSORED ***", :category :secret}
   ;;  "#secret {:data BAD_TOKEN :default 5}"          #secret{:data "*** CENSORED ***", :category :secret}

@@ -27,11 +27,12 @@
               (def -current-timestamp (java.time.ZonedDateTime/now -zone-id))
               (def -build-timestamp (str (.format -current-timestamp -datetime-formatter)))
               (def -build-number (run-cmd ["git" "rev-list" "HEAD" "--count"]))
-              (def -version-template (run-cmd ["cat" "version.tmpl"]))
-              (def -version (str/replace -version-template "{{build-number}}" -build-number))
               (def -git-url (run-cmd ["git" "config" "--get" "remote.origin.url"]))
               (def -git-branch (run-cmd ["git" "rev-parse" "--abbrev-ref" "HEAD"]))
-              (def -git-sha (run-cmd ["git" "rev-parse" "--short" "HEAD"])))
+              (def -git-sha (run-cmd ["git" "rev-parse" "--short" "HEAD"]))
+              (def -version-template (run-cmd ["cat" "version.tmpl"]))
+              (def -version (cond-> (str/replace -version-template "{{build-number}}" -build-number)
+                              (not= "master" -git-branch) (str "-SNAPSHOT"))))
 
   :enter    (let [{:keys [doc print-task-header?]
                    :or   {print-task-header? true}} (current-task)]

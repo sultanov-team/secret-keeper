@@ -2,19 +2,28 @@
   (:refer-clojure :exclude [read])
   #?(:cljs
      (:require
-       [goog.object :as gobj]))
+       [cljs.reader :as reader]
+       [goog.object :as gobj]
+       [goog.string :as gstr]
+       [goog.string.format]))
   #?(:clj
      (:import
        (clojure.lang
          PersistentArrayMap
          PersistentHashMap
-         Symbol))))
+         Symbol)
+       (java.io
+         Writer))))
 
 
 (defn square
   "FIXME: remove me"
   [x]
   (* x x))
+
+
+#?(:clj
+   (set! *warn-on-reflection* true))
 
 
 
@@ -42,7 +51,7 @@
 ;;
 
 (defprotocol SecretReader
-  "Secret Reader protocol."
+  "Secret reader protocol."
   :extend-via-metadata true
   (read [this] "Reads a secret."))
 
@@ -50,7 +59,9 @@
 (defprotocol SecretBuilder
   "Secret builder protocol."
   :extend-via-metadata true
-  (mark-as [data] [data category] "Makes a secret using the specified category."))
+  (mark-as [data] [data category] "Makes a secret using the specified category.")
+  (category [secret] "Returns the secret category.")
+  (data [secret] "Returns the secret data."))
 
 
 
@@ -62,7 +73,46 @@
   [data category]
   SecretBuilder
   (mark-as [secret] secret)
-  (mark-as [_ new-category] (make-secret data new-category)))
+  (mark-as [_ new-category] (make-secret data new-category))
+  (category [_] category)
+  (data [_] data)
+
+  Object
+  (toString [_] (str {:data "*** CENSORED ***", :category category})))
+
+
+(defn secret?
+  "Checks if x is a Secret instance."
+  [x]
+  (#?(:clj instance?, :cljs implements?) Secret x))
+
+
+(def tag
+  #?(:clj  (.intern "#secret")
+     :cljs "#secret"))
+
+
+#?(:clj
+   (defmethod print-method Secret [secret ^Writer writer]
+     (.write writer (format "%s %s" tag secret))))
+
+
+#?(:clj
+   (defmethod print-dup Secret [secret ^Writer writer]
+     (.write writer (format "%s %s" tag secret))))
+
+
+;; FIXME: [2021-09-29, ilshat@sultanov.team] Doesn't work when printing in REPL (only cljs)
+
+#?(:cljs
+   (extend-type Secret
+     IPrintWithWriter
+     (-pr-writer [secret writer _opts]
+       (-write writer (gstr/format "%s %s" tag secret)))))
+
+
+#?(:cljs
+   (reader/register-tag-parser! 'secret read))
 
 
 
@@ -78,7 +128,9 @@
   nil
   (mark-as
     ([_] nil)
-    ([_ _] nil)))
+    ([_ _] nil))
+  (category [_] nil)
+  (data [_] nil))
 
 
 #?(:clj
@@ -86,14 +138,18 @@
      Object
      (mark-as
        ([data] (make-secret data))
-       ([data category] (make-secret data category))))
+       ([data category] (make-secret data category)))
+     (category [_] nil)
+     (data [_] nil))
 
    :cljs
    (extend-protocol SecretBuilder
      default
      (mark-as
        ([data] (make-secret data))
-       ([data category] (make-secret data category)))))
+       ([data category] (make-secret data category)))
+     (category [_] nil)
+     (data [_] nil)))
 
 
 
@@ -165,25 +221,52 @@
 
 
 (comment
-  (def f (partial clojure.edn/read-string {:readers *data-readers*}))
+  (def f #?(:clj  (partial clojure.edn/read-string {:readers *data-readers*})
+            :cljs reader/read-string))
+
+  (def s (make-secret 123 :private))
+  (category s) ;; => :private
+  (data s) ;; => 123
+  (str s) ;; => "{:data \"*** CENSORED ***\", :category :private}"
+  (prn-str s) ;; => "#secret {:data \"*** CENSORED ***\", :category :private}\n"
+
   (reduce
     (fn [acc s]
       (assoc acc s (f s)))
-    {} ["#secret \"string\"" ;; => #secret.keeper.Secret{:data "string", :category :secret}
-        "#secret 123" ;; => #secret.keeper.Secret{:data 123, :category :secret}
-        "#secret true" ;; => #secret.keeper.Secret{:data true, :category :secret}
-        "#secret \\a" ;; => #secret.keeper.Secret{:data \a, :category :secret}
-        "#secret :keyword" ;; => #secret.keeper.Secret{:data :keyword, :category :secret}
-        "#secret TEST_TOKEN" ;; => #secret.keeper.Secret{:data "token_12345", :category :secret}
-        "#secret {:category :private :data \"123\"}" ;; => #secret.keeper.Secret{:data "123", :category :private}
-        "#secret {:username \"john\"}" ;; => #secret.keeper.Secret{:data {:username "john"}, :category :secret}
-        "#secret {:data BAD_TOKEN :default 5}" ;; => default => #secret.keeper.Secret{:data 5, :category :secret}
-        "#secret {:data TEST_TOKEN :default 5}" ;; => #secret.keeper.Secret{:data "token_12345", :category :secret}
-        "#secret {:data \"string\"}" ;; => #secret.keeper.Secret{:data "string", :category :secret}
-        "#secret {:category :private :data \"string\"}" ;; => #secret.keeper.Secret{:data "string", :category :private}
-        "#secret [1 2 3]" ;; => #secret.keeper.Secret{:data [1 2 3], :category :secret}
-        "#secret (1 2 3)" ;; => #secret.keeper.Secret{:data (1 2 3), :category :secret}
-        "#secret #{1 2 3}" ;; => #secret.keeper.Secret{:data #{1 3 2}, :category :secret}
-        "#secret nil" ;; => nil
+    {} [
+        "#secret #{1 2 3}"
+        "#secret (1 2 3)"
+        "#secret 123"
+        "#secret :keyword"
+        "#secret [1 2 3]"
+        "#secret \"string\""
+        "#secret \\a"
+        "#secret nil"
+        "#secret TEST_TOKEN"
+        "#secret true"
+        "#secret {:category :private :data \"string\"}"
+        "#secret {:data \"string\"}"
+        "#secret {:data BAD_TOKEN :default 5}"
+        "#secret {:data TEST_TOKEN :default 5}"
+        "#secret {:username \"john\"}"
         ])
+  ;; =>
+  ;; {
+  ;;  "#secret #{1 2 3}"                              #secret{:data "*** CENSORED ***", :category :secret}
+  ;;  "#secret (1 2 3)"                               #secret{:data "*** CENSORED ***", :category :secret}
+  ;;  "#secret 123"                                   #secret{:data "*** CENSORED ***", :category :secret}
+  ;;  "#secret :keyword"                              #secret{:data "*** CENSORED ***", :category :secret}
+  ;;  "#secret [1 2 3]"                               #secret{:data "*** CENSORED ***", :category :secret}
+  ;;  "#secret \"string\""                            #secret{:data "*** CENSORED ***", :category :secret}
+  ;;  "#secret \\a"                                   #secret{:data "*** CENSORED ***", :category :secret}
+  ;;  "#secret nil"                                   nil
+  ;;  "#secret TEST_TOKEN"                            #secret{:data "*** CENSORED ***", :category :secret}
+  ;;  "#secret true"                                  #secret{:data "*** CENSORED ***", :category :secret}
+  ;;  "#secret {:category :private :data \"123\"}"    #secret{:data "*** CENSORED ***", :category :private}
+  ;;  "#secret {:category :private :data \"string\"}" #secret{:data "*** CENSORED ***", :category :private}
+  ;;  "#secret {:data \"string\"}"                    #secret{:data "*** CENSORED ***", :category :secret}
+  ;;  "#secret {:data BAD_TOKEN :default 5}"          #secret{:data "*** CENSORED ***", :category :secret}
+  ;;  "#secret {:data TEST_TOKEN :default 5}"         #secret{:data "*** CENSORED ***", :category :secret}
+  ;;  "#secret {:username \"john\"}"                  #secret{:data "*** CENSORED ***", :category :secret}
+  ;;  }
   )

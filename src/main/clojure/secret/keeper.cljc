@@ -1,4 +1,5 @@
 (ns secret.keeper
+  "A Clojure(Script) library for keeping your secrets under control."
   (:refer-clojure :exclude [read])
   #?(:cljs
      (:require

@@ -76,18 +76,11 @@
     (bb/clean)))
 
 
-(defn test-clj
+(defn test
   [opts]
   (-> opts
     (with-defaults)
-    (bb/run-task [:test-clj])))
-
-
-(defn test-cljs
-  [opts]
-  (-> opts
-    (with-defaults)
-    (bb/run-task [:test-cljs])))
+    (bb/run-task [:test])))
 
 
 (defn build

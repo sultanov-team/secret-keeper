@@ -1,4 +1,5 @@
 (ns secret.keeper-test
+  (:refer-clojure :exclude [read-string])
   #?(:clj
      (:require
        [clojure.edn :refer [read-string]]

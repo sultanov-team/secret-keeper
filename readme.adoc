@@ -1,3 +1,9 @@
+image:https://img.shields.io/github/license/sultanov-team/secret-keeper[license,link=license]
+image:https://codecov.io/gh/sultanov-team/secret-keeper/branch/master/graph/badge.svg?token=3ouDFyBXhm)[codecov,link=https://codecov.io/gh/sultanov-team/secret-keeper]
+image:https://github.com/sultanov-team/secret-keeper/workflows/build/badge.svg[build]
+
+image:https://img.shields.io/clojars/v/team.sultanov/secret-keeper.svg[clojars,link=https://clojars.org/team.sultanov/secret-keeper]
+
 == team.sultanov/secret-keeper
 
 A Clojure(Script) library for keeping your secrets under control.
@@ -9,10 +15,10 @@ Add the following dependency in your project:
 [source,clojure]
 ----
 ;; project.clj or build.boot
-[team.sultanov/secret-keeper "0.0.1"]
+[team.sultanov/secret-keeper "0.1.36-alpha"]
 
 ;; deps.edn
-team.sultanov/secret-keeper {:mvn/version "0.0.1"}
+team.sultanov/secret-keeper {:mvn/version "0.1.36-alpha"}
 
 ----
 
@@ -22,4 +28,4 @@ TBD
 
 === License
 
-link:license[Copyright © 2021 sultanov.team]
+Copyright © 2021 sultanov.team

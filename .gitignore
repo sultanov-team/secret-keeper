@@ -3,6 +3,7 @@
 *~
 .classpath
 .clj-kondo/.cache
+.cljs_node_repl
 .cpcache
 .idea
 .java-version

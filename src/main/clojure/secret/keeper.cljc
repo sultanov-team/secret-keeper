@@ -1,6 +1,5 @@
 (ns secret.keeper
   "A Clojure(Script) library for keeping your secrets under control."
-  (:refer-clojure :exclude [read])
   #?(:cljs
      (:require
        [cljs.reader :as reader]
@@ -26,12 +25,7 @@
 ;; Helpers
 ;;
 
-(def default-category :secret)
-
-(declare make-secret)
-
-
-(defn- get-env
+(defn get-env
   "Returns the value of the environment variable using the specified key."
   ([key]
     (get-env key nil))
@@ -45,18 +39,18 @@
 ;; Protocols
 ;;
 
-(defprotocol SecretReader
-  "Secret reader protocol."
-  :extend-via-metadata true
-  (read [this] "Reads a secret."))
-
-
-(defprotocol SecretBuilder
+(defprotocol ISecretBuilder
   "Secret builder protocol."
   :extend-via-metadata true
-  (mark-as [data] [data category] "Makes a secret using the specified category.")
-  (category [secret] "Returns the secret category.")
-  (data [secret] "Returns the secret data."))
+  (make-secret [data] [data category] "Makes a secret using the specified category."))
+
+
+(defprotocol ISecret
+  "Secret protocol."
+  :extend-via-metadata true
+  (secret? [x] "Returns `true` if `x` is a secret.")
+  (data [secret] "Returns the secret data.")
+  (category [secret] "Returns the secret category."))
 
 
 
@@ -64,23 +58,28 @@
 ;; Wrapper
 ;;
 
+(def default-category :secret)
+
+
 (defrecord Secret
   [data category]
-  SecretBuilder
-  (mark-as [secret] secret)
-  (mark-as [_ new-category] (make-secret data new-category))
-  (category [_] category)
+  ISecret
+  (secret? [_] true)
   (data [_] data)
+  (category [_] category)
+
+  ISecretBuilder
+  (make-secret [secret] secret)
+  (make-secret [_ new-category] (->Secret data new-category))
 
   Object
   (toString [_] (str {:data "*** CENSORED ***", :category category})))
 
 
-(defn secret?
-  "Checks if x is a Secret instance."
-  [x]
-  (#?(:clj instance?, :cljs implements?) Secret x))
 
+;;
+;; Printers
+;;
 
 (def tag
   #?(:clj  (.intern "#secret")
@@ -107,165 +106,108 @@
 
 
 #?(:cljs
-   (reader/register-tag-parser! 'secret read))
+   (reader/register-tag-parser! 'secret make-secret))
 
 
 
 ;; Builders
 
-(defn make-secret
-  "Makes a secret using the specified category."
-  ([data] (make-secret data default-category))
-  ([data category] (->Secret data category)))
-
-
-(extend-protocol SecretBuilder
+(extend-protocol ISecretBuilder
   nil
-  (mark-as
+  (make-secret
     ([_] nil)
-    ([_ _] nil))
-  (category [_] nil)
-  (data [_] nil))
+    ([_ _] nil)))
 
 
 #?(:clj
-   (extend-protocol SecretBuilder
+   (extend-protocol ISecretBuilder
      Object
-     (mark-as
-       ([data] (make-secret data))
-       ([data category] (make-secret data category)))
-     (category [_] nil)
-     (data [_] nil))
-
-   :cljs
-   (extend-protocol SecretBuilder
-     default
-     (mark-as
-       ([data] (make-secret data))
-       ([data category] (make-secret data category)))
-     (category [_] nil)
-     (data [_] nil)))
-
-
-
-;;
-;; Readers
-;;
-
-(extend-protocol SecretReader
-  nil
-  (read [_] nil))
-
-
-#?(:clj
-   (extend-protocol SecretReader
-     Object
-     (read [data] (make-secret data))
+     (make-secret
+       ([data] (->Secret data default-category))
+       ([data category] (->Secret data category)))
 
      Symbol
-     (read [key] (make-secret (get-env key)))
+     (make-secret
+       ;; get-env can be nil
+       ([key] (make-secret (get-env key)))
+       ([key category] (make-secret (get-env key) category)))
 
      PersistentArrayMap
-     (read [map]
-       (let [{:keys [category data default]
-              :or   {category default-category
-                     default  nil}} map]
-         (cond
-           (symbol? data) (make-secret (get-env data default) category)
-           (some? data) (make-secret data category)
-           :else (make-secret map))))
+     (make-secret
+       ([map]
+         (let [{:keys [category data]
+                :or   {category default-category}} map]
+           (if data
+             (make-secret data category)
+             (->Secret map category))))
+       ([map category] (->Secret map category)))
 
      PersistentHashMap
-     (read [map]
-       (let [{:keys [category data default]
-              :or   {category default-category
-                     default  nil}} map]
-         (cond
-           (symbol? data) (make-secret (get-env data default) category)
-           (some? data) (make-secret data category)
-           :else (make-secret map)))))
+     (make-secret
+       ([map]
+         (let [{:keys [category data]
+                :or   {category default-category}} map]
+           (if data
+             (make-secret data category)
+             (->Secret map category))))
+       ([map category] (->Secret map category))))
 
    :cljs
-   (extend-protocol SecretReader
+   (extend-protocol ISecretBuilder
      default
-     (read [data] (make-secret data))
+     (make-secret
+       ([data] (->Secret data default-category))
+       ([data category] (->Secret data category)))
 
      cljs.core/Symbol
-     (read [key] (make-secret (get-env key)))
+     (make-secret
+       ;; get-env can be nil
+       ([key] (make-secret (get-env key)))
+       ([key category] (make-secret (get-env key) category)))
 
      cljs.core/PersistentArrayMap
-     (read [map]
-       (let [{:keys [category data default]
-              :or   {category default-category
-                     default  nil}} map]
-         (cond
-           (symbol? data) (make-secret (get-env data default) category)
-           (some? data) (make-secret data category)
-           :else (make-secret map))))
+     (make-secret
+       ([map]
+         (let [{:keys [category data]
+                :or   {category default-category}} map]
+           (if data
+             (make-secret data category)
+             (->Secret map category))))
+       ([map category] (->Secret map category)))
 
      cljs.core/PersistentHashMap
-     (read [map]
-       (let [{:keys [category data default]
-              :or   {category default-category
-                     default  nil}} map]
-         (cond
-           (symbol? data) (make-secret (get-env data default) category)
-           (some? data) (make-secret data category)
-           :else (make-secret map))))))
+     (make-secret
+       ([map]
+         (let [{:keys [category data]
+                :or   {category default-category}} map]
+           (if data
+             (make-secret data category)
+             (->Secret map category))))
+       ([map category] (->Secret map category)))))
 
 
 
-(comment
+;;
+;; Secrets
+;;
 
-  (def secret (make-secret 123 :private))
-  (category secret) ;; => :private
-  (data secret) ;; => 123
-  (str secret) ;; => "{:data \"*** CENSORED ***\", :category :private}"
-  (pr-str secret) ;; => "#secret {:data \"*** CENSORED ***\", :category :private}"
+(extend-protocol ISecret
+  nil
+  (secret? [_] false)
+  (data [_] nil)
+  (category [_] nil))
 
 
-  (def parse
-    #?(:clj  (partial clojure.edn/read-string {:readers *data-readers*})
-       :cljs reader/read-string))
+#?(:clj
+   (extend-protocol ISecret
+     Object
+     (secret? [_] false)
+     (data [_] nil)
+     (category [_] nil))
 
-  ;; In the project root directory .env file contains TEST_TOKEN environment variable
-  ;; $TEST_TOKEN = token_12345
-  (reduce
-    (fn [acc s]
-      (assoc acc s (parse s)))
-    {} [
-        "#secret #{1 2 3}"
-        "#secret (1 2 3)"
-        "#secret 123"
-        "#secret :keyword"
-        "#secret [1 2 3]"
-        "#secret \"string\""
-        "#secret \\a"
-        "#secret nil"
-        "#secret TEST_TOKEN"
-        "#secret true"
-        "#secret {:category :private :data \"string\"}"
-        "#secret {:data \"string\"}"
-        "#secret {:data BAD_TOKEN :default 5}"
-        "#secret {:data TEST_TOKEN :default 5}"
-        "#secret {:username \"john\"}"
-        ])
-  ;; =>
-  ;; {
-  ;;  "#secret #{1 2 3}"                              #secret{:data "*** CENSORED ***", :category :secret}
-  ;;  "#secret (1 2 3)"                               #secret{:data "*** CENSORED ***", :category :secret}
-  ;;  "#secret 123"                                   #secret{:data "*** CENSORED ***", :category :secret}
-  ;;  "#secret :keyword"                              #secret{:data "*** CENSORED ***", :category :secret}
-  ;;  "#secret [1 2 3]"                               #secret{:data "*** CENSORED ***", :category :secret}
-  ;;  "#secret \"string\""                            #secret{:data "*** CENSORED ***", :category :secret}
-  ;;  "#secret \\a"                                   #secret{:data "*** CENSORED ***", :category :secret}
-  ;;  "#secret nil"                                   nil
-  ;;  "#secret TEST_TOKEN"                            #secret{:data "*** CENSORED ***", :category :secret}
-  ;;  "#secret true"                                  #secret{:data "*** CENSORED ***", :category :secret}
-  ;;  "#secret {:category :private :data \"string\"}" #secret{:data "*** CENSORED ***", :category :private}
-  ;;  "#secret {:data \"string\"}"                    #secret{:data "*** CENSORED ***", :category :secret}
-  ;;  "#secret {:data BAD_TOKEN :default 5}"          #secret{:data "*** CENSORED ***", :category :secret}
-  ;;  "#secret {:data TEST_TOKEN :default 5}"         #secret{:data "*** CENSORED ***", :category :secret}
-  ;;  "#secret {:username \"john\"}"                  #secret{:data "*** CENSORED ***", :category :secret}
-  ;;  }
-  )
+   :cljs
+   (extend-protocol ISecret
+     default
+     (secret? [_] false)
+     (data [_] nil)
+     (category [_] nil)))

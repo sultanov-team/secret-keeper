@@ -1,1 +1,1 @@
-{secret secret.keeper/read}
+{secret secret.keeper/make-secret}

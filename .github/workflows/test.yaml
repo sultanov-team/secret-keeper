@@ -63,6 +63,10 @@ jobs:
       - name: Setup deps
         run: bb setup
 
+      - name: Setup environment variables
+        run: >-
+          echo 'CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }}' >> $GITHUB_ENV;
+
       - name: Cleanup
         run: bb clean
 
@@ -74,3 +78,6 @@ jobs:
 
       - name: Run build
         run: bb build
+
+      - name: Upload coverage
+        run: bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -f ./coverage/codecov.json

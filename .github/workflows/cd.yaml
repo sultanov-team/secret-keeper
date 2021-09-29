@@ -1,0 +1,77 @@
+name: cd
+
+on:
+  push:
+    branches:
+      - 'master'
+      - 'develop'
+
+jobs:
+  cd:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup openjdk
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: 16
+
+      - name: Setup nodejs
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Setup clojure
+        uses: DeLaGuardo/setup-clojure@3.5
+        with:
+          cli: latest
+
+      - name: Setup babashka
+        uses: just-sultanov/setup-babashka@v2
+        with:
+          version: '0.6.1'
+
+      - name: Setup clj-kondo
+        uses: DeLaGuardo/setup-clj-kondo@master
+        with:
+          version: '2021.09.25'
+
+      - name: Setup cljstyle
+        uses: just-sultanov/setup-cljstyle@v1
+        with:
+          version: '0.15.0'
+
+      - name: Cache deps
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gitlibs
+            ~/.m2
+          key: ${{ runner.os }}-deps-${{ hashFiles('**/deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-deps-
+
+      - name: Setup deps
+        run: bb setup
+
+      - name: Cleanup
+        run: bb clean
+
+      - name: Run linters
+        run: bb lint
+
+      - name: Run tests
+        run: bb test
+
+      - name: Run build
+        run: bb build
+
+      - name: Run deploy
+        run: bb deploy

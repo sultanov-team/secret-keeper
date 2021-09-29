@@ -1,9 +1,9 @@
-name: deploy
+name: Build and deploy (master, develop)
 
 on: [push, pull_request]
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

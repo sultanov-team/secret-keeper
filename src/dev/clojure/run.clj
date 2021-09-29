@@ -88,7 +88,9 @@
   (let [opts       (with-defaults opts)
         build-meta (extract-meta opts)]
     (write-meta build-meta)
-    (bb/jar opts)))
+    (-> opts
+      (assoc :scm (:git-url build-meta))
+      (bb/jar))))
 
 
 (defn deploy

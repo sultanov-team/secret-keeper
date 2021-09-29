@@ -30,9 +30,10 @@
               (def -git-url (run-cmd ["git" "config" "--get" "remote.origin.url"]))
               (def -git-branch (run-cmd ["git" "rev-parse" "--abbrev-ref" "HEAD"]))
               (def -git-sha (run-cmd ["git" "rev-parse" "--short" "HEAD"]))
+              (def -deployable? (contains? #{"master" "develop"} -git-branch))
               (def -version-template (run-cmd ["cat" "version.tmpl"]))
               (def -version (cond-> (str/replace -version-template "{{build-number}}" -build-number)
-                              (not= "master" -git-branch) (str "-SNAPSHOT"))))
+                              -deployable? (str "-SNAPSHOT"))))
 
   :enter    (let [{:keys [doc print-task-header?]
                    :or   {print-task-header? true}} (current-task)]
@@ -96,8 +97,9 @@
              :task    (shell {:extra-env -config} "clojure -T:dev:run build")}
 
   deploy    {:doc     "Run deploy"
-             :depends [-config build]
-             :task    (shell {:extra-env -config} "clojure -T:dev:run deploy")}
+             :depends [-config]
+             :task    (when -deployable?
+                        (shell {:extra-env -config} "clojure -T:dev:run deploy"))}
 
   outdated  {:doc     "Check for outdated dependencies"
              :depends [-config]

@@ -73,5 +73,10 @@ jobs:
       - name: Run build
         run: bb build
 
-      - name: Run deploy
-        run: bb deploy
+      - name: Upload coverage
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: coverage
+          files: codecov.json
+          verbose: true

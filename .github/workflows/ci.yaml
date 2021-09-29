@@ -1,6 +1,11 @@
 name: ci
 
-on: push
+on:
+  push:
+    branches-ignore:
+      - 'master'
+      - 'develop'
+  pull_request:
 
 jobs:
   ci:

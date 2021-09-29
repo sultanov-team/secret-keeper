@@ -61,6 +61,11 @@ jobs:
       - name: Setup deps
         run: bb setup
 
+      - name: Setup environment variables
+        run: >-
+          echo 'CLOJARS_USERNAME=${{ secrets.CLOJARS_USERNAME }}' >> $GITHUB_ENV;
+          echo 'CLOJARS_PASSWORD=${{ secrets.CLOJARS_PASSWORD }}' >> $GITHUB_ENV;
+
       - name: Cleanup
         run: bb clean
 
@@ -77,6 +82,8 @@ jobs:
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          directory: coverage
-          files: codecov.json
+          files: ./coverage/codecov.json
           verbose: true
+
+      - name: Run deploy
+        run: bb deploy

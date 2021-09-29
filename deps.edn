@@ -1,6 +1,7 @@
 {:paths   ["src/main/clojure" "src/main/resources"]
 
- :deps    {org.clojure/clojure {:mvn/version "1.10.3"}}
+ :deps    {org.clojure/clojure {:mvn/version "1.10.3"}
+           metosin/malli       {:mvn/version "0.6.2"}}
 
  :aliases {:dev       {:extra-paths ["src/dev/clojure" "src/dev/resources"]
                        :extra-deps  {org.clojure/clojurescript {:mvn/version "1.10.879"}

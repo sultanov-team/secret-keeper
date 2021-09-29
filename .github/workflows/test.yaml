@@ -1,4 +1,4 @@
-name: ci
+name: test
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   pull_request:
 
 jobs:
-  ci:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

@@ -72,7 +72,9 @@
 
   repl      {:doc     "Run REPL"
              :depends [-config]
-             :task    (shell {:extra-env -config} "clojure -T:dev:run repl")}
+             :task    (let [test-env {:TEST_TOKEN "token_12345"}
+                            extra-env (merge -config test-env)]
+                        (shell {:extra-env extra-env} "clojure -T:dev:run repl"))}
 
   lint      {:doc  "Run linters"
              :task (do
@@ -84,7 +86,9 @@
 
   test      {:doc     "Run tests"
              :depends [-config]
-             :task    (shell {:extra-env -config} "clojure -T:dev:run test")}
+             :task    (let [test-env {:TEST_TOKEN "token_12345"}
+                            extra-env (merge -config test-env)]
+                        (shell {:extra-env extra-env} "clojure -T:dev:run test"))}
 
   build     {:doc     "Run build"
              :depends [-config]

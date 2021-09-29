@@ -65,6 +65,7 @@ jobs:
         run: >-
           echo 'CLOJARS_USERNAME=${{ secrets.CLOJARS_USERNAME }}' >> $GITHUB_ENV;
           echo 'CLOJARS_PASSWORD=${{ secrets.CLOJARS_PASSWORD }}' >> $GITHUB_ENV;
+          echo 'CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }}' >> $GITHUB_ENV;
 
       - name: Cleanup
         run: bb clean
@@ -78,12 +79,8 @@ jobs:
       - name: Run build
         run: bb build
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v2
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/codecov.json
-          verbose: true
-
       - name: Run deploy
         run: bb deploy
+
+      - name: Upload coverage
+        run: bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -f ./coverage/codecov.json

@@ -22,6 +22,8 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '16'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Setup clojure
         uses: DeLaGuardo/setup-clojure@3.5
@@ -52,6 +54,9 @@ jobs:
           key: ${{ runner.os }}-deps-${{ hashFiles('**/deps.edn') }}
           restore-keys: |
             ${{ runner.os }}-deps-
+
+      - name: Setup deps
+        run: bb setup
 
       - name: Cleanup
         run: bb clean

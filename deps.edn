@@ -3,30 +3,25 @@
  :deps    {org.clojure/clojure {:mvn/version "1.10.3"}
            metosin/malli       {:mvn/version "0.6.2"}}
 
- :aliases {:dev       {:extra-paths ["src/dev/clojure" "src/dev/resources"]
-                       :extra-deps  {org.clojure/clojurescript {:mvn/version "1.10.879"}
-                                     cider/piggieback          {:mvn/version "0.5.2"}
-                                     nrepl/nrepl               {:mvn/version "0.8.3"}
-                                     hashp/hashp               {:mvn/version "0.2.1"}}
-                       :main-opts   ["--main" "nrepl.cmdline"
-                                     "--middleware" "[cider.piggieback/wrap-cljs-repl]"]}
+ :aliases {:dev  {:extra-paths ["src/dev/clojure" "src/dev/resources"]
+                  :extra-deps  {org.clojure/clojurescript {:mvn/version "1.10.879"}
+                                cider/piggieback          {:mvn/version "0.5.2"}
+                                nrepl/nrepl               {:mvn/version "0.8.3"}
+                                hashp/hashp               {:mvn/version "0.2.1"}}
+                  :main-opts   ["--main" "nrepl.cmdline"
+                                "--middleware" "[cider.piggieback/wrap-cljs-repl]"]}
 
-           :test-clj  {:extra-paths ["src/test/clojure" "src/test/resources"]
-                       :extra-deps  {lambdaisland/kaocha           {:mvn/version "1.0.887"}
-                                     lambdaisland/kaocha-cloverage {:mvn/version "1.0.75"}}
-                       :main-opts   ["--main" "kaocha.runner"]}
+           :test {:extra-paths ["src/test/clojure" "src/test/resources"]
+                  :extra-deps  {lambdaisland/kaocha           {:mvn/version "1.0.887"}
+                                lambdaisland/kaocha-cloverage {:mvn/version "1.0.75"}
+                                com.lambdaisland/kaocha-cljs  {:mvn/version "1.0.113"}}
+                  :main-opts   ["--main" "kaocha.runner"]}
 
-           :test-cljs {:extra-paths ["src/test/clojure" "src/test/resources"]
-                       :extra-deps  {olical/cljs-test-runner {:mvn/version "3.8.0"}}
-                       :main-opts   ["--main" "cljs-test-runner.main"
-                                     "--out" "target/test-cljs"
-                                     "--dir" "src/test/clojure"]}
+           :run  {:extra-deps {io.github.clojure/tools.build    {:git/tag "v0.5.1" :git/sha "21da7d4"}
+                               io.github.seancorfield/build-clj {:git/tag "v0.5.0" :git/sha "2ceb95a"}}
+                  :ns-default run}
 
-           :run       {:extra-deps {io.github.clojure/tools.build    {:git/tag "v0.5.1" :git/sha "21da7d4"}
-                                    io.github.seancorfield/build-clj {:git/tag "v0.5.0" :git/sha "2ceb95a"}}
-                       :ns-default run}
+           :nop  {:extra-deps {org.slf4j/slf4j-nop {:mvn/version "1.7.32"}}}
 
-           :nop       {:extra-deps {org.slf4j/slf4j-nop {:mvn/version "1.7.32"}}}
-
-           :antq      {:extra-deps {com.github.liquidz/antq {:mvn/version "1.1.0"}}
-                       :main-opts  ["--main" "antq.core"]}}}
+           :antq {:extra-deps {com.github.liquidz/antq {:mvn/version "1.1.0"}}
+                  :main-opts  ["--main" "antq.core"]}}}

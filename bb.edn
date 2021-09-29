@@ -63,6 +63,9 @@
                                                      :lib-git-sha         :git-sha})
                                    (pretty-print))}
 
+  setup     {:doc  "Setup deps"
+             :task (shell "npm ci")}
+
   clean     {:doc     "Cleanup"
              :depends [-config]
              :task    (shell {:extra-env -config} "clojure -T:dev:run clean")}
@@ -79,17 +82,9 @@
   lint:fix  {:doc  "Run linters & fix"
              :task (shell "cljstyle fix src")}
 
-  test:clj  {:doc     "Run Clojure tests"
+  test      {:doc     "Run tests"
              :depends [-config]
-             :task    (shell {:extra-env -config} "clojure -T:dev:run test-clj")}
-
-  test:cljs {:doc     "Run ClojureScript tests"
-             :depends [-config]
-             :task    (shell {:extra-env -config} "clojure -T:dev:run test-cljs")}
-
-  -test     {:depends [test:clj test:cljs]}
-  test      {:doc  "Run all tests"
-             :task (run '-test)}
+             :task    (shell {:extra-env -config} "clojure -T:dev:run test")}
 
   build     {:doc     "Run build"
              :depends [-config]

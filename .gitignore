@@ -15,5 +15,6 @@
 checkouts
 classes
 coverage
+node_modules
 target
 build.edn

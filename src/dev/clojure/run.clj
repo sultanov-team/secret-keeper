@@ -54,7 +54,7 @@
 
 (defn write-meta
   [build-meta]
-  (let [dir "src/main/resources/secret-keeper"]
+  (let [dir "src/main/resources/secret/keeper"]
     (file/ensure-dir dir)
     (->> build-meta
       (pretty-print)
@@ -89,7 +89,8 @@
         build-meta (extract-meta opts)]
     (write-meta build-meta)
     (-> opts
-      (assoc :scm (:git-url build-meta))
+      (assoc :scm {:url (:git-url build-meta)
+                   :tag (:version build-meta)})
       (bb/jar))))
 
 

@@ -4,27 +4,201 @@ image:https://github.com/sultanov-team/secret-keeper/workflows/build/badge.svg[b
 
 image:https://img.shields.io/clojars/v/team.sultanov/secret-keeper.svg[clojars,link=https://clojars.org/team.sultanov/secret-keeper]
 
-== team.sultanov/secret-keeper
+== Secret Keeper
 
 A Clojure(Script) library for keeping your secrets under control.
 
-=== Quick Start Guide
+**Status: ** Alpha.
+The design and prototyping stage.
+
+=== Motivation
+
+I want to be calm about sensitive data.
+This is security and responsibility to my clients.
+Specifying categories of sensitive data at the model level gives an understanding of what data we are working with.
+
+Easy to mark up categories of sensitive data at model level and use them when reading configuration files, environment variables and also in the middlewares of the public API.
+
+=== Installation
 
 Add the following dependency in your project:
 
 [source,clojure]
 ----
 ;; project.clj or build.boot
-[team.sultanov/secret-keeper "0.3.55"]
+[team.sultanov/secret-keeper "0.3.59"]
 
 ;; deps.edn
-team.sultanov/secret-keeper {:mvn/version "0.3.55"}
-
+team.sultanov/secret-keeper {:mvn/version "0.3.59"}
 ----
 
-=== Example
+=== Usage
 
-TBD
+[source,clojure]
+----
+(ns example
+  (:refer-clojure :exclude [read-string])
+  (:require
+    #?(:clj  [clojure.edn :refer [read-string]]
+       :cljs [cljs.reader :refer [read-string]])
+    [malli.core :as m]
+    [secret.keeper :as keeper]
+    [secret.keeper.malli :as keeper.malli]))
+
+
+;;
+;; Build secrets
+;;
+
+(def secret
+  (keeper/make-secret {:passport "12345678"})) ; default category -> :secret
+
+
+(keeper/secret? secret) ; => true
+
+(prn secret) ; => #secret {:data "*** CENSORED ***", :category :secret}
+(pr-str secret) ; => "#secret {:data \"*** CENSORED ***\", :category :secret}"
+
+(keeper/data secret) ; => {:passport "12345678"}
+(keeper/category secret) ; => :secret
+
+
+;; Change the secret category
+
+(-> secret
+    (keeper/make-secret :personal)
+    (keeper/category)) ; => :personal
+
+;; nil and objects aren't a secret
+(keeper/secret? "NOT A SECRET") ; => false
+(keeper/data "NOT A SECRET") ; => nil
+(keeper/category "NOT A SECRET") ; => nil
+
+(keeper/secret? nil) ; => false
+(keeper/make-secret nil) ; => nil
+(keeper/data (keeper/make-secret nil)) ; => nil
+(keeper/category (keeper/make-secret nil)) ; => nil
+
+
+
+;;
+;; Parse secrets
+;;
+
+(def read-secret
+  (partial read-string {:readers {'secret keeper/make-secret}}))
+
+
+;; Getting a secret from environment variables by symbols
+;; For example, we have an environment variable: `$TEST_TOKEN=token_12345`
+
+(def secret-token
+  (read-secret "#secret TEST_TOKEN"))
+
+
+(prn secret-token) ; => #secret {:data "*** CENSORED ***", :category :secret}
+(pr-str secret-token) ; => "#secret {:data \"*** CENSORED ***\", :category :secret}"
+
+(keeper/data secret-token) ; => "token_12345"
+(keeper/category secret-token) ; => :secret
+
+
+;; Getting a secret from environment variables by symbols with the custom category
+
+(def secret-token+custom-category
+  (read-secret "#secret {:data TEST_TOKEN, :category :confidential}"))
+
+
+(prn secret-token+custom-category) ; => #secret {:data "*** CENSORED ***", :category :confidential}
+(pr-str secret-token+custom-category) ; => "#secret {:data \"*** CENSORED ***\", :category :confidential}"
+
+(keeper/data secret-token+custom-category) ; => "token_12345"
+(keeper/category secret-token+custom-category) ; => :confidential
+
+
+
+;;
+;; Malli
+;;
+
+;; Transformer without any options
+
+(= {:password "p4$$w0rd"}
+   (m/decode [:map [:password string?]]
+             {:password (keeper/make-secret "p4$$w0rd")}
+             (keeper.malli/transformer))) ; => true
+
+
+;; Transformer with some options:
+;; - :key     - schema property key (by default ::keeper/secret)
+;; - :secrets - schema type or map key name
+
+(def Transformer
+  (keeper.malli/transformer
+    {:key     :category
+     :secrets {:passport :confidential
+               :password :internal-only}}))
+
+
+(def User
+  [:map
+   [:firstname string?]
+   [:lastname string?]
+   [:email string?]
+   [:passport string?]
+   [:address [:map {:category :personal}
+              [:street string?]
+              [:zip int?]
+              [:city string?]
+              [:country [:enum "USA"]]]]
+   [:credentials [:map
+                  [:login string?]
+                  [:password string?]]]])
+
+
+(def FakeUser
+  {:firstname   "john"
+   :lastname    "doe"
+   :email       "john@doe.me"
+   :passport    "123456789"
+   :address     {:street  "1488 Secret Street"
+                 :zip     12345
+                 :city    "Durham"
+                 :country "USA"}
+   :credentials {:login    "john"
+                 :password "p4$$w0rd"}})
+
+
+(m/encode User FakeUser Transformer)
+;; =>
+;; {:firstname   "john"
+;;  :lastname    "doe"
+;;  :email       "john@doe.me"
+;;  :passport    #secret{:data     "*** CENSORED ***"
+;;                       :category :confidential}
+;;  :address     #secret{:data     "*** CENSORED ***"
+;;                       :category :personal}
+;;  :credentials {:login    "john"
+;;                :password #secret{:data     "*** CENSORED ***"
+;;                                  :category :internal-only}}}
+
+(= FakeUser
+   (as-> FakeUser $
+         (m/encode User $ Transformer)
+         (m/decode User $ Transformer))) ; => true
+----
+
+=== Roadmap
+
+- [x] Secret's API
+- [x] Secret's transformer
+- [ ] Secret's schema and builder
+- [ ] Secret's validator that unwraps secret data and compares it with the raw data
+- [ ] Secret's ring middleware and builder
+
+=== Special thanks
+
+- To https://github.com/metosin/malli[metosin/malli] authors and contributors
 
 === License
 

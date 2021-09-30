@@ -15,10 +15,10 @@ Add the following dependency in your project:
 [source,clojure]
 ----
 ;; project.clj or build.boot
-[team.sultanov/secret-keeper "0.1.36-alpha"]
+[team.sultanov/secret-keeper "0.3.55"]
 
 ;; deps.edn
-team.sultanov/secret-keeper {:mvn/version "0.1.36-alpha"}
+team.sultanov/secret-keeper {:mvn/version "0.3.55"}
 
 ----
 

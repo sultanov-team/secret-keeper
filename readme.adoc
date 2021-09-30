@@ -26,10 +26,10 @@ Add the following dependency in your project:
 [source,clojure]
 ----
 ;; project.clj or build.boot
-[team.sultanov/secret-keeper "0.3.59"]
+[team.sultanov/secret-keeper "RELEASE"]
 
 ;; deps.edn
-team.sultanov/secret-keeper {:mvn/version "0.3.59"}
+team.sultanov/secret-keeper {:mvn/version "RELEASE"}
 ----
 
 === Usage

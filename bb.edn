@@ -98,8 +98,9 @@
 
   deploy    {:doc     "Run deploy"
              :depends [-config]
-             :task    (when -deployable?
-                        (shell {:extra-env -config} "clojure -T:dev:run deploy"))}
+             :task    (if -deployable?
+                        (shell {:extra-env -config} "clojure -T:dev:run deploy")
+                        (println "Skip deploy..."))}
 
   outdated  {:doc     "Check for outdated dependencies"
              :depends [-config]

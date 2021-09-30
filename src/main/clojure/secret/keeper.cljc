@@ -59,6 +59,7 @@
 ;;
 
 (def default-category :secret)
+(declare ->Secret)
 
 
 (defrecord Secret
@@ -110,7 +111,9 @@
 
 
 
+;;
 ;; Builders
+;;
 
 (extend-protocol ISecretBuilder
   nil

@@ -130,7 +130,7 @@ team.sultanov/secret-keeper {:mvn/version "RELEASE"}
 
 
 ;; Transformer with some options:
-;; - :key     - schema property key (by default ::keeper/secret)
+;; - :key     - schema property key (by default ::keeper/category)
 ;; - :secrets - schema type or map key name
 
 (def Transformer
@@ -146,7 +146,7 @@ team.sultanov/secret-keeper {:mvn/version "RELEASE"}
    [:lastname string?]
    [:email string?]
    [:passport string?]
-   [:address [:map {:category :personal}
+   [:address [:map {:category :personal} ; local category
               [:street string?]
               [:zip int?]
               [:city string?]

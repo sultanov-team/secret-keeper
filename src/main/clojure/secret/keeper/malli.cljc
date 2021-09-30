@@ -9,6 +9,7 @@
 
 (defn transformer
   "Secret transformer.
+
   - Encoder - encodes all secrets using the specified categories.
   - Decoder - decodes all secrets.
 
@@ -24,7 +25,7 @@
     ;; 1. Define your transformer
     (def Transformer
       (transformer
-        {:key     :category  ;; by default ::keeper/secret
+        {:key     :category  ;; by default ::keeper/category
          :secrets {:passport :confidential
                    :password :internal-only}}))
 
@@ -48,7 +49,8 @@
     (m/encode User <your-data> Transformer)
 
     ;; 4. Decode all secrets
-    (m/decode User <your-data> Transformer)"
+    (m/decode User <your-data> Transformer)
+    ```"
   ([]
     (transformer nil))
   ([{:keys [key secrets]

@@ -1,1 +1,27 @@
-== changelog
+== Changelog
+
+=== Released
+
+'''
+==== 0.3.61 (2021-09-30)
+
+===== Fixed
+
+- Some typos in docs
+
+'''
+
+==== 0.3.58 (2021-09-30)
+
+===== Added
+
+- Secret's API
+- Secret's transformer
+
+'''
+
+==== 0.3.55 (2021-09-30)
+
+The first official release
+
+'''

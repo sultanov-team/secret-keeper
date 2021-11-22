@@ -3,6 +3,19 @@
 === Released
 
 '''
+
+==== 1.0.75 (2021-11-23)
+
+===== Added
+
+- Secret's schema
+
+===== Changed
+
+- *BREAKING CHANGES* `secret.keeper/data` function returns Object/default `as-is`
+
+'''
+
 ==== 0.3.61 (2021-09-30)
 
 ===== Fixed
@@ -23,5 +36,3 @@
 ==== 0.3.55 (2021-09-30)
 
 The first official release
-
-'''

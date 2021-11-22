@@ -28,10 +28,10 @@
 (defn get-env
   "Returns the value of the environment variable using the specified key."
   ([key]
-    (get-env key nil))
+   (get-env key nil))
   ([key default]
-    #?(:clj (or (System/getenv (str key)) default))
-    #?(:cljs (or (gobj/get js/process.env key) default))))
+   #?(:clj (or (System/getenv (str key)) default))
+   #?(:cljs (or (gobj/get js/process.env key) default))))
 
 
 
@@ -138,21 +138,21 @@
      PersistentArrayMap
      (make-secret
        ([map]
-         (let [{:keys [category data]
-                :or   {category default-category}} map]
-           (if data
-             (make-secret data category)
-             (->Secret map category))))
+        (let [{:keys [category data]
+               :or   {category default-category}} map]
+          (if data
+            (make-secret data category)
+            (->Secret map category))))
        ([map category] (->Secret map category)))
 
      PersistentHashMap
      (make-secret
        ([map]
-         (let [{:keys [category data]
-                :or   {category default-category}} map]
-           (if data
-             (make-secret data category)
-             (->Secret map category))))
+        (let [{:keys [category data]
+               :or   {category default-category}} map]
+          (if data
+            (make-secret data category)
+            (->Secret map category))))
        ([map category] (->Secret map category))))
 
    :cljs
@@ -171,21 +171,21 @@
      cljs.core/PersistentArrayMap
      (make-secret
        ([map]
-         (let [{:keys [category data]
-                :or   {category default-category}} map]
-           (if data
-             (make-secret data category)
-             (->Secret map category))))
+        (let [{:keys [category data]
+               :or   {category default-category}} map]
+          (if data
+            (make-secret data category)
+            (->Secret map category))))
        ([map category] (->Secret map category)))
 
      cljs.core/PersistentHashMap
      (make-secret
        ([map]
-         (let [{:keys [category data]
-                :or   {category default-category}} map]
-           (if data
-             (make-secret data category)
-             (->Secret map category))))
+        (let [{:keys [category data]
+               :or   {category default-category}} map]
+          (if data
+            (make-secret data category)
+            (->Secret map category))))
        ([map category] (->Secret map category)))))
 
 

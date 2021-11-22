@@ -28,8 +28,8 @@ jobs:
       - name: Setup openjdk
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt'
-          java-version: 16
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Setup nodejs
         uses: actions/setup-node@v2
@@ -46,12 +46,12 @@ jobs:
       - name: Setup babashka
         uses: just-sultanov/setup-babashka@v2
         with:
-          version: '0.6.1'
+          version: '0.6.5'
 
       - name: Setup clj-kondo
         uses: DeLaGuardo/setup-clj-kondo@master
         with:
-          version: '2021.09.25'
+          version: '2021.10.19'
 
       - name: Setup cljstyle
         uses: just-sultanov/setup-cljstyle@v1

@@ -52,40 +52,40 @@
     (m/decode User <your-data> Transformer)
     ```"
   ([]
-    (transformer nil))
+   (transformer nil))
   ([{:keys [key secrets]
      :or   {key     ::keeper/category
             secrets {}}}]
-    (let [global-keys  (set (keys secrets))
-          get-category (fn [schema]
-                         (or (some-> schema m/properties key)
-                           (some->> schema m/type (get secrets))))
+   (let [global-keys  (set (keys secrets))
+         get-category (fn [schema]
+                        (or (some-> schema m/properties key)
+                            (some->> schema m/type (get secrets))))
 
-          encoder      (fn [schema _opts]
-                         (if-some [category (get-category schema)]
-                           (fn [x]
-                             (keeper/make-secret x category))
-                           (when (seq global-keys)
-                             (when-some [entries (m/entries schema)]
-                               (let [ks (reduce
-                                          (fn [acc [k & _]]
-                                            (if (contains? global-keys k)
-                                              (assoc acc k (get secrets k))
-                                              acc))
-                                          {} entries)]
-                                 (fn [x]
-                                   (if (map? x)
-                                     (reduce-kv
-                                       (fn [acc key category]
-                                         (update acc key #(keeper/make-secret % category)))
-                                       x ks)
-                                     x)))))))
+         encoder      (fn [schema _opts]
+                        (if-some [category (get-category schema)]
+                          (fn [x]
+                            (keeper/make-secret x category))
+                          (when (seq global-keys)
+                            (when-some [entries (m/entries schema)]
+                              (let [ks (reduce
+                                         (fn [acc [k & _]]
+                                           (if (contains? global-keys k)
+                                             (assoc acc k (get secrets k))
+                                             acc))
+                                         {} entries)]
+                                (fn [x]
+                                  (if (map? x)
+                                    (reduce-kv
+                                      (fn [acc key category]
+                                        (update acc key #(keeper/make-secret % category)))
+                                      x ks)
+                                    x)))))))
 
-          decoder      (fn [_schema _opts]
-                         (fn [x]
-                           (if (keeper/secret? x)
-                             (keeper/data x)
-                             x)))]
-      (mt/transformer
-        {:default-encoder {:compile encoder}
-         :default-decoder {:compile decoder}}))))
+         decoder      (fn [_schema _opts]
+                        (fn [x]
+                          (if (keeper/secret? x)
+                            (keeper/data x)
+                            x)))]
+     (mt/transformer
+       {:default-encoder {:compile encoder}
+        :default-decoder {:compile decoder}}))))

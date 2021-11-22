@@ -86,8 +86,8 @@ jobs:
       - name: Run tests
         run: bb test
 
-      - name: Run build
-        run: bb build
+      - name: Run build jar
+        run: bb jar
 
       - name: Run deploy
         run: bb deploy

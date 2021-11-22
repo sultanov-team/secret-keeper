@@ -8,9 +8,6 @@ image:https://img.shields.io/clojars/v/team.sultanov/secret-keeper.svg[clojars,l
 
 A Clojure(Script) library for keeping your secrets under control.
 
-**Status: ** Alpha.
-The design and prototyping stage.
-
 === Motivation
 
 I want to be calm about sensitive data.
@@ -71,7 +68,7 @@ team.sultanov/secret-keeper {:mvn/version "RELEASE"}
 
 ;; nil and objects aren't a secret
 (keeper/secret? "NOT A SECRET") ; => false
-(keeper/data "NOT A SECRET") ; => nil
+(keeper/data "NOT A SECRET") ; => "NOT A SECRET"
 (keeper/category "NOT A SECRET") ; => nil
 
 (keeper/secret? nil) ; => false
@@ -187,14 +184,6 @@ team.sultanov/secret-keeper {:mvn/version "RELEASE"}
          (m/encode User $ Transformer)
          (m/decode User $ Transformer))) ; => true
 ----
-
-=== Roadmap
-
-- [x] Secret's API
-- [x] Secret's transformer
-- [ ] Secret's schema and builder
-- [ ] Secret's validator that unwraps secret data and compares it with the raw data
-- [ ] Secret's ring middleware and builder
 
 === Special thanks
 

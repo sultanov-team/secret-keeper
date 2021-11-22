@@ -47,7 +47,7 @@
     (let [coll [nil #?(:clj (Object.) :cljs (js/Object.))]]
       (doseq [actual coll]
         (is (false? (sut/secret? actual)))
-        (is (nil? (sut/data actual)))
+        (is (= actual (sut/data actual)))
         (is (nil? (sut/category actual))))))
 
   (testing "make-secret function should be override the secret category"

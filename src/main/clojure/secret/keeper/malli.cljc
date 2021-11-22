@@ -7,6 +7,13 @@
     [secret.keeper :as keeper]))
 
 
+(def secret?
+  (m/-simple-schema
+    {:type            :secret
+     :pred            keeper/secret?
+     :type-properties {:error/message "should be satisfied protocol `secret.keeper/ISecret`"}}))
+
+
 (defn transformer
   "Secret transformer.
 

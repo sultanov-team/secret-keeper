@@ -1,108 +1,125 @@
 {:min-bb-version
- "0.6.1"
+ "0.6.5"
 
  :tasks
- {:requires ([babashka.fs :as fs]
-             [babashka.process :as proc]
-             [clojure.set :as set]
-             [clojure.string :as str]
-             [clojure.pprint :as pprint])
+ {:requires        ([babashka.fs :as fs]
+                    [babashka.process :as process]
+                    [clojure.string :as str]
+                    [clojure.pprint :as pprint])
 
-  :init     (do
-              (defn get-env [s]
-                (System/getenv s))
+  :init            (do
+                     (defn get-env [s]
+                       (System/getenv s))
 
-              (defn get-property [s]
-                (System/getProperty s))
+                     (defn get-property [s]
+                       (System/getProperty s))
 
-              (defn run-cmd [command]
-                (-> (proc/process command) :out slurp str/trim-newline))
+                     (defn pretty-print [x]
+                       (binding [pprint/*print-right-margin* 130]
+                         (pprint/pprint x)))
 
-              (defn pretty-print [x]
-                (binding [pprint/*print-right-margin* 130]
-                  (pprint/pprint x)))
+                     (defn execute [command]
+                       (-> command (process/tokenize) (process/process) :out slurp str/trim-newline))
 
-              (def -zone-id (java.time.ZoneId/of "UTC"))
-              (def -datetime-formatter java.time.format.DateTimeFormatter/ISO_OFFSET_DATE_TIME)
-              (def -current-timestamp (java.time.ZonedDateTime/now -zone-id))
-              (def -build-timestamp (str (.format -current-timestamp -datetime-formatter)))
-              (def -build-number (run-cmd ["git" "rev-list" "HEAD" "--count"]))
-              (def -git-url (run-cmd ["git" "config" "--get" "remote.origin.url"]))
-              (def -git-branch (run-cmd ["git" "rev-parse" "--abbrev-ref" "HEAD"]))
-              (def -git-sha (run-cmd ["git" "rev-parse" "--short" "HEAD"]))
-              (def -deployable? (contains? #{"master" "develop"} -git-branch))
-              (def -snapshot? (not= "master" -git-branch))
-              (def -version-template (run-cmd ["cat" "version.tmpl"]))
-              (def -version (cond-> (str/replace -version-template "{{build-number}}" -build-number)
-                              -snapshot? (str "-SNAPSHOT"))))
+                     (def -zone-id (java.time.ZoneId/of "UTC"))
+                     (def -datetime-formatter java.time.format.DateTimeFormatter/ISO_OFFSET_DATE_TIME)
+                     (def -current-timestamp (java.time.ZonedDateTime/now -zone-id))
+                     (def -build-timestamp (str (.format -current-timestamp -datetime-formatter)))
+                     (def -build-number (execute "git rev-list HEAD --count"))
+                     (def -git-url (execute "git config --get remote.origin.url"))
+                     (def -git-branch (execute "git rev-parse --abbrev-ref HEAD"))
+                     (def -git-sha (execute "git rev-parse --short HEAD"))
 
-  :enter    (let [{:keys [doc print-task-header?]
-                   :or   {print-task-header? true}} (current-task)]
-              (when (and print-task-header? doc)
-                (println (str " ▸ " doc))))
+                     (def -release? (= "master" -git-branch))
+                     (def -snapshot? (not -release?))
+                     (def -deployable? (contains? #{"master" "develop"} -git-branch))
 
-  -config   (do
-              {:lib-version         -version
-               :lib-build-number    -build-number
-               :lib-build-timestamp -build-timestamp
-               :lib-git-url         -git-url
-               :lib-git-branch      -git-branch
-               :lib-git-sha         -git-sha})
+                     (def -version-template (execute "cat version.tmpl"))
+                     (def -version (cond-> (str/replace -version-template "{{build-number}}" -build-number)
+                                     -snapshot? (str "-SNAPSHOT")))
 
-  version   {:doc                "Show version"
-             :print-task-header? false
-             :depends            [-config]
-             :task               (print (:lib-version -config))}
+                     (def -config
+                       {:version         -version
+                        :build-number    -build-number
+                        :build-timestamp -build-timestamp
+                        :git-url         -git-url
+                        :git-branch      -git-branch
+                        :git-sha         -git-sha})
 
-  config    {:doc                "Show config"
-             :print-task-header? false
-             :depends            [-config]
-             :task               (-> -config
-                                   (set/rename-keys {:lib-version         :version
-                                                     :lib-build-number    :build-number
-                                                     :lib-build-timestamp :build-timestamp
-                                                     :lib-git-url         :git-url
-                                                     :lib-git-branch      :git-branch
-                                                     :lib-git-sha         :git-sha})
-                                   (pretty-print))}
+                     (def extra-env
+                       {:TEST_TOKEN "token_12345"})
 
-  setup     {:doc  "Setup deps"
-             :task (shell "npm ci")}
+                     (defn as-params [params]
+                       (->> params
+                         (seq)
+                         (flatten)
+                         (map (fn [x]
+                                (str/replace (pr-str x) (java.util.regex.Pattern/compile "(\".+\")") "'$1'")))
+                         (str/join \space)))
 
-  clean     {:doc     "Cleanup"
-             :depends [-config]
-             :task    (shell {:extra-env -config} "clojure -T:dev:run clean")}
+                     (defn with-params [command]
+                       (->> -config
+                         (as-params)
+                         (str command " "))))
 
-  repl      {:doc     "Run REPL"
-             :depends [-config]
-             :task    (let [test-env {:TEST_TOKEN "token_12345"}
-                            extra-env (merge -config test-env)]
-                        (shell {:extra-env extra-env} "clojure -T:dev:run repl"))}
+  :enter           (let [{:keys [doc print-doc?]
+                          :or   {print-doc? true}} (current-task)]
+                     (when (and print-doc? doc)
+                       (println (str "▸ " doc))))
 
-  lint      {:doc  "Run linters"
-             :task (do
-                     (shell "cljstyle check src")
-                     (shell "clj-kondo --lint src"))}
+  ;;;;
+  ;; Tasks
+  ;;;;
 
-  lint:fix  {:doc  "Run linters & fix"
-             :task (shell "cljstyle fix src")}
+  version          {:doc        "[secret-keeper] Show version"
+                    :print-doc? false
+                    :task       (print -version)}
 
-  test      {:doc     "Run tests"
-             :depends [-config]
-             :task    (let [test-env {:TEST_TOKEN "token_12345"}
-                            extra-env (merge -config test-env)]
-                        (shell {:extra-env extra-env} "clojure -T:dev:run test"))}
 
-  build     {:doc     "Run build"
-             :depends [-config]
-             :task    (shell {:extra-env -config} "clojure -T:dev:run build")}
+  config           {:doc        "[secret-keeper] Show config"
+                    :print-doc? false
+                    :task       (pretty-print -config)}
 
-  deploy    {:doc     "Run deploy"
-             :depends [-config]
-             :task    (if -deployable?
-                        (shell {:extra-env -config} "clojure -T:dev:run deploy")
-                        (println "Skip deploy..."))}
+  setup            {:doc  "[secret-keeper] Setup dependencies"
+                    :task (shell "npm ci")}
 
-  outdated  {:doc     "Check for outdated dependencies"
-             :depends [-config]
-             :task    (shell {:extra-env -config} "clojure -T:dev:run outdated")}}}
+  outdated         {:doc  "[secret-keeper] Check for outdated dependencies"
+                    :task (do
+                            (clojure (with-params "-T:build outdated"))
+                            (shell "npx ncu"))}
+
+  outdated:upgrade {:doc  "[secret-keeper] Upgrade outdated dependencies"
+                    :task (do
+                            (clojure (with-params "-T:build outdated:upgrade"))
+                            (shell "npx ncu -u"))}
+
+  clean            {:doc  "[secret-keeper] Cleanup"
+                    :task (clojure (with-params "-T:build clean"))}
+
+  lint             {:doc  "[secret-keeper] Run linters"
+                    :task (do
+                            (shell "cljstyle check src")
+                            (shell "clj-kondo --lint src"))}
+
+  lint:fix         {:doc  "[secret-keeper] Run linters & fix"
+                    :task (shell "cljstyle fix src")}
+
+  repl             {:doc     "[secret-keeper] Run REPL"
+                    :depends [clean]
+                    :task    (shell {:extra-env extra-env} (with-params "clojure -T:build repl"))}
+
+  test             {:doc     "[secret-keeper] Run tests"
+                    :depends [clean]
+                    :task    (shell {:extra-env extra-env} (with-params "clojure -T:build test"))}
+
+  jar              {:doc     "[secret-keeper] Run build jar"
+                    :depends [clean]
+                    :task    (clojure (with-params "-T:build jar"))}
+
+  install          {:doc  "[secret-keeper] Install the jar locally"
+                    :task (clojure (with-params "-T:build install"))}
+
+  deploy           {:doc  "[secret-keeper] Deploy the jar to clojars"
+                    :task (if -deployable?
+                            (clojure (with-params "-T:build deploy"))
+                            (println "Skip deploy..."))}}}

@@ -205,12 +205,12 @@
    (extend-protocol ISecret
      Object
      (secret? [_] false)
-     (data [_] nil)
+     (data [x] x)
      (category [_] nil))
 
    :cljs
    (extend-protocol ISecret
      default
      (secret? [_] false)
-     (data [_] nil)
+     (data [x] x)
      (category [_] nil)))

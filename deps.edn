@@ -1,10 +1,10 @@
 {:paths   ["src/main/clojure" "src/main/resources"]
 
  :deps    {org.clojure/clojure {:mvn/version "1.10.3"}
-           metosin/malli       {:mvn/version "0.6.2"}}
+           metosin/malli       {:mvn/version "0.7.0"}}
 
  :aliases {:develop          {:extra-paths ["src/dev/clojure" "src/dev/resources"]
-                              :extra-deps  {org.clojure/clojurescript {:mvn/version "1.10.893"}
+                              :extra-deps  {org.clojure/clojurescript {:mvn/version "1.10.896"}
                                             cider/piggieback          {:mvn/version "0.5.3"}
                                             nrepl/nrepl               {:mvn/version "0.8.3"}
                                             hashp/hashp               {:mvn/version "0.2.1"}}
@@ -18,7 +18,7 @@
                               :main-opts   ["--main" "kaocha.runner"]}
 
            :build            {:extra-paths ["."]
-                              :extra-deps  {io.github.seancorfield/build-clj {:git/tag "v0.5.4" :git/sha "bc9c0cc"}}
+                              :extra-deps  {io.github.seancorfield/build-clj {:git/tag "v0.6.0" :git/sha "2451bea"}}
                               :ns-default  build}
 
            :nop              {:extra-deps {org.slf4j/slf4j-nop {:mvn/version "1.7.32"}}}

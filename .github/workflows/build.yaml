@@ -1,29 +1,69 @@
-name: Build and deploy (master, develop)
+name: CI
 
 on:
   push:
-    paths:
-      - 'src/**'
-      - '**.edn'
-      - '.github/workflows/**'
-      - 'package.json'
-      - 'version.tmpl'
+    branches:
+      - master
+      - develop
   pull_request:
-    paths:
-      - 'src/**'
-      - '**.edn'
-      - '.github/workflows/**'
-      - 'package.json'
-      - 'version.tmpl'
+    branches:
+      - master
+      - develop
+
 
 jobs:
-  build-and-deploy:
+
+  lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
+      - name: Setup babashka
+        uses: just-sultanov/setup-babashka@v2
+        with:
+          version: '0.6.8'
+
+      - name: Setup clj-kondo
+        uses: DeLaGuardo/setup-clj-kondo@master
+        with:
+          version: '2021.12.01'
+
+      - name: Setup cljstyle
+        uses: just-sultanov/setup-cljstyle@v1
+        with:
+          version: '0.15.0'
+
+      - name: Cache deps
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.clojure
+            ~/.cpcache
+          key: ${{ runner.os }}-deps-${{ hashFiles('**/deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-deps-
+
+      - name: Run linters
+        run: bb lint
+
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup environment variables
+        run: >-
+          echo 'CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }}' >> $GITHUB_ENV;
 
       - name: Setup openjdk
         uses: actions/setup-java@v2
@@ -39,31 +79,23 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: Setup clojure
-        uses: DeLaGuardo/setup-clojure@3.5
+        uses: DeLaGuardo/setup-clojure@3.6
         with:
           cli: latest
 
       - name: Setup babashka
         uses: just-sultanov/setup-babashka@v2
         with:
-          version: '0.6.5'
-
-      - name: Setup clj-kondo
-        uses: DeLaGuardo/setup-clj-kondo@master
-        with:
-          version: '2021.10.19'
-
-      - name: Setup cljstyle
-        uses: just-sultanov/setup-cljstyle@v1
-        with:
-          version: '0.15.0'
+          version: '0.6.8'
 
       - name: Cache deps
         uses: actions/cache@v2
         with:
           path: |
+            ~/.m2/repository
             ~/.gitlibs
-            ~/.m2
+            ~/.clojure
+            ~/.cpcache
           key: ${{ runner.os }}-deps-${{ hashFiles('**/deps.edn') }}
           restore-keys: |
             ${{ runner.os }}-deps-
@@ -71,26 +103,57 @@ jobs:
       - name: Setup deps
         run: bb setup
 
+      - name: Run tests
+        run: bb test
+
+      - name: Upload coverage
+        run: bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -f ./coverage/codecov.json
+
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - name: Setup environment variables
         run: >-
           echo 'CLOJARS_USERNAME=${{ secrets.CLOJARS_USERNAME }}' >> $GITHUB_ENV;
           echo 'CLOJARS_PASSWORD=${{ secrets.CLOJARS_PASSWORD }}' >> $GITHUB_ENV;
-          echo 'CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }}' >> $GITHUB_ENV;
 
-      - name: Cleanup
-        run: bb clean
+      - name: Setup openjdk
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Run linters
-        run: bb lint
+      - name: Setup clojure
+        uses: DeLaGuardo/setup-clojure@3.6
+        with:
+          cli: latest
 
-      - name: Run tests
-        run: bb test
+      - name: Setup babashka
+        uses: just-sultanov/setup-babashka@v2
+        with:
+          version: '0.6.8'
+
+      - name: Cache deps
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.clojure
+            ~/.cpcache
+          key: ${{ runner.os }}-deps-${{ hashFiles('**/deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-deps-
 
       - name: Run build jar
         run: bb jar
 
       - name: Run deploy
         run: bb deploy
-
-      - name: Upload coverage
-        run: bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -f ./coverage/codecov.json

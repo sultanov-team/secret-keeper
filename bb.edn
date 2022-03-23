@@ -1,5 +1,5 @@
 {:min-bb-version
- "0.6.8"
+ "0.7.8"
 
  :tasks
  {:requires        ([babashka.fs :as fs]

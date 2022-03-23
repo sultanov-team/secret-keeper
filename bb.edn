@@ -91,7 +91,7 @@
   outdated:upgrade {:doc  "[secret-keeper] Upgrade outdated dependencies"
                     :task (do
                             (clojure (with-params "-T:build outdated:upgrade"))
-                            (shell "npx ncu -u"))}
+                            (shell "npx ncu -u && npm i"))}
 
   clean            {:doc  "[secret-keeper] Cleanup"
                     :task (clojure (with-params "-T:build clean"))}

@@ -4,6 +4,16 @@
 
 '''
 
+==== 1.0.86 (2022-03-24)
+
+===== Changed
+
+* Bump deps
+- `org.clojure/clojure v1.11.0`
+- `metosin/malli v0.8.4`
+
+'''
+
 ==== 1.0.80 (2021-12-07)
 
 ===== Changed

@@ -1,29 +1,29 @@
 {:paths   ["src/main/clojure" "src/main/resources"]
 
- :deps    {org.clojure/clojure {:mvn/version "1.10.3"}
-           metosin/malli       {:mvn/version "0.7.0"}}
+ :deps    {org.clojure/clojure {:mvn/version "1.11.0"}
+           metosin/malli       {:mvn/version "0.8.4"}}
 
  :aliases {:develop          {:extra-paths ["src/dev/clojure" "src/dev/resources"]
-                              :extra-deps  {org.clojure/clojurescript {:mvn/version "1.10.896"}
+                              :extra-deps  {org.clojure/clojurescript {:mvn/version "1.11.4"}
                                             cider/piggieback          {:mvn/version "0.5.3"}
-                                            nrepl/nrepl               {:mvn/version "0.8.3"}
+                                            nrepl/nrepl               {:mvn/version "0.9.0"}
                                             hashp/hashp               {:mvn/version "0.2.1"}}
                               :main-opts   ["--main" "nrepl.cmdline"
                                             "--middleware" "[cider.piggieback/wrap-cljs-repl]"]}
 
            :test             {:extra-paths ["src/test/clojure" "src/test/resources"]
-                              :extra-deps  {lambdaisland/kaocha           {:mvn/version "1.60.945"}
+                              :extra-deps  {lambdaisland/kaocha           {:mvn/version "1.64.1010"}
                                             lambdaisland/kaocha-cloverage {:mvn/version "1.0.75"}
-                                            com.lambdaisland/kaocha-cljs  {:mvn/version "1.0.113"}}
+                                            com.lambdaisland/kaocha-cljs  {:mvn/version "1.2.123"}}
                               :main-opts   ["--main" "kaocha.runner"]}
 
            :build            {:extra-paths ["."]
-                              :extra-deps  {io.github.seancorfield/build-clj {:git/tag "v0.6.0" :git/sha "2451bea"}}
+                              :extra-deps  {io.github.seancorfield/build-clj {:git/tag "v0.8.0" :git/sha "9bd8b8a"}}
                               :ns-default  build}
 
-           :nop              {:extra-deps {org.slf4j/slf4j-nop {:mvn/version "1.7.32"}}}
+           :nop              {:extra-deps {org.slf4j/slf4j-nop {:mvn/version "1.7.36"}}}
 
-           :outdated         {:extra-deps {com.github.liquidz/antq {:mvn/version "1.3.0"}}
+           :outdated         {:extra-deps {com.github.liquidz/antq {:mvn/version "1.6.0"}}
                               :main-opts  ["--main" "antq.core"]}
 
            :outdated/upgrade {:main-opts ["--main" "antq.core" "--upgrade" "--force"]}}}
